@@ -162,6 +162,7 @@ export default function BaseChart({
     stroke: {
       curve: 'smooth',
       width: 2.5,
+      ...customOptions.stroke,
     },
     xaxis: xaxisMerged,
     yaxis: yaxisDefaults,
