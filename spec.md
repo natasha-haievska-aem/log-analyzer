@@ -178,6 +178,68 @@ A selector (e.g., segmented button or dropdown) switches between three presentat
 
 ---
 
+### 2. V2-V3 Aeris Cache Statistics Comparison
+
+**Purpose:** Compare Aeris cache hit/miss statistics between v2 and v3 log formats on a per-day, per-hour basis.
+
+#### Input Formats
+
+Two separate file uploads:
+
+##### V2 Input (`.log` file)
+
+A plain-text `.log` file containing `clusterStats after CacheStuffing` blocks:
+
+```
+Feb 16 00:57:52 ip-172-30-0-166 node[3629451]: wwa:business-cron clusterStats after CacheStuffing: {
+Feb 16 00:57:52 ip-172-30-0-166 node[3629451]:   hits: 6467,
+Feb 16 00:57:52 ip-172-30-0-166 node[3629451]:   misses: 8630,
+Feb 16 00:57:52 ip-172-30-0-166 node[3629451]:   cacheDeferredHits: 234,
+Feb 16 00:57:52 ip-172-30-0-166 node[3629451]:   cacheRetryFails: 0,
+Feb 16 00:57:52 ip-172-30-0-166 node[3629451]:   aerisCalls: 8396,
+Feb 16 00:57:52 ip-172-30-0-166 node[3629451]:   aerisAlertsCalls: 8389,
+Feb 16 00:57:52 ip-172-30-0-166 node[3629451]:   aerisForecastsCalls: 0,
+Feb 16 00:57:52 ip-172-30-0-166 node[3629451]:   aerisAirQualityIndexCalls: 0
+Feb 16 00:57:52 ip-172-30-0-166 node[3629451]: }
+```
+
+> **Note:** V2 timestamps are in **America/New_York** timezone (no year in logs). Year is inferred from the current year. Timestamps are converted to UTC internally for consistent handling. `cacheRetryFails` is excluded from comparison (not present in v3).
+
+##### V3 Input (`.json` file)
+
+Same format as [Aeris Cache Statistics](#1-aeris-cache-statistics) — array of objects with `@timestamp` (UTC) and `@message.aerisCacheStats`.
+
+#### Controls
+
+| Control             | Description                                                                |
+| ------------------- | -------------------------------------------------------------------------- |
+| **Timezone**        | Same timezone selector as Tool 1 (affects display of both v2 and v3 data). |
+| **V2 Day Selector** | Dropdown of available days from the v2 log.                                |
+| **V3 Day Selector** | Dropdown of available days from the v3 log.                                |
+| **Metric Selector** | Same checkboxes as Tool 1 — toggle which metrics are displayed.            |
+
+#### Chart
+
+- **X-axis:** Hours 0–23 (one tick per hour).
+- **Y-axis:** Metric values.
+- **Series:** For each selected metric, two lines — **V2 (dashed)** and **V3 (solid)** — using the same color per metric.
+- **Nearest-entry matching:** ±30 min tolerance (same logic as Tool 1's "Specific Hour" view).
+- **Legend:** Custom legend above the chart showing SVG line samples (dashed/solid) with series name and color.
+- **Tooltip:** Custom tooltip on hover showing line-style indicators (dashed/solid) next to each series value.
+
+#### Comparison Table
+
+Below the chart, a 24-row table. V2 DateTime is always the 2nd column; V3 DateTime is always the last column:
+
+| Hour | V2 DateTime (date) | V2 [metric] | V3 [metric] | V3 DateTime (date) |
+| ---- | ------------------ | ----------- | ----------- | ------------------ |
+| 00   | Feb 16 00:57       | 6467        | 7200        | Feb 18 00:55       |
+| 01   | —                  | —           | 8100        | Feb 18 01:02       |
+
+Columns adapt dynamically based on selected metrics (V2 value then V3 value per metric). Empty cells shown as `—`.
+
+---
+
 ## Future Tools
 
-> Additional analyzing tools will be added here as they are defined. Each follows the same pattern: vertical tab entry, dedicated JSON uploader, and tool-specific UI.
+> Additional analyzing tools will be added here as they are defined. Each follows the same pattern: vertical tab entry, dedicated file uploader, and tool-specific UI.
