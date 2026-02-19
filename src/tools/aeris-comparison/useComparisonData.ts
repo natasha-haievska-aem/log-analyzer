@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { format, getHours, getMinutes } from 'date-fns';
+import { format, getHours, getMinutes, subDays } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import type { AerisLogEntry, AerisCacheStats } from '../../types/aeris';
 import type { V2LogEntry, ComparisonDayOption, HourlyEntry } from '../../types/aeris-comparison';
@@ -58,19 +58,21 @@ export function useComparisonData(
     }));
   }, [v3DayGroups]);
 
-  // Build hourly data for selected days
+  // Build hourly data for selected days (including prev-day entries for midnight)
   const v2HourlyData = useMemo((): (HourlyEntry | null)[] => {
     if (!selectedV2Day) return new Array(24).fill(null);
     const dayEntries = v2DayGroups.get(selectedV2Day);
     if (!dayEntries) return new Array(24).fill(null);
-    return buildHourlyData(dayEntries, timezone);
+    const prevDayEntries = getPrevDayEntries(selectedV2Day, v2DayGroups);
+    return buildHourlyData(dayEntries, timezone, prevDayEntries);
   }, [selectedV2Day, v2DayGroups, timezone]);
 
   const v3HourlyData = useMemo((): (HourlyEntry | null)[] => {
     if (!selectedV3Day) return new Array(24).fill(null);
     const dayEntries = v3DayGroups.get(selectedV3Day);
     if (!dayEntries) return new Array(24).fill(null);
-    return buildHourlyData(dayEntries, timezone);
+    const prevDayEntries = getPrevDayEntries(selectedV3Day, v3DayGroups);
+    return buildHourlyData(dayEntries, timezone, prevDayEntries);
   }, [selectedV3Day, v3DayGroups, timezone]);
 
   return {
@@ -80,7 +82,6 @@ export function useComparisonData(
     v3HourlyData,
   };
 }
-
 
 /**
  * Groups entries by calendar day in the given timezone.
@@ -112,12 +113,28 @@ function formatDayLabel(dayKey: string): string {
 }
 
 /**
+ * Returns entries from the previous calendar day (for midnight matching).
+ */
+function getPrevDayEntries(
+  dayKey: string,
+  dayGroups: Map<string, TimestampedEntry[]>
+): TimestampedEntry[] {
+  const currentDate = new Date(dayKey + 'T12:00:00'); // noon to avoid DST issues
+  const prevDate = subDays(currentDate, 1);
+  const prevDayKey = format(prevDate, 'yyyy-MM-dd');
+  return dayGroups.get(prevDayKey) ?? [];
+}
+
+/**
  * For each hour 0–23, finds the nearest entry within ±30 minutes.
+ * For hour 0 (midnight), also considers late entries (23:30+) from the previous day.
+ * Same-day entries use linear distance; previous-day entries use cross-midnight distance.
  * Returns an array of 24 elements (null if no entry found for that hour).
  */
 function buildHourlyData(
   entries: TimestampedEntry[],
-  timezone: string
+  timezone: string,
+  prevDayEntries: TimestampedEntry[] = []
 ): (HourlyEntry | null)[] {
   const windowMinutes = 30;
   const result: (HourlyEntry | null)[] = new Array(24).fill(null);
@@ -127,24 +144,30 @@ function buildHourlyData(
     let bestEntry: TimestampedEntry | null = null;
     let bestDistance = Infinity;
 
+    // Same-day entries: linear distance only (no circular wrapping)
     for (const entry of entries) {
       const zonedTime = toZonedTime(entry.timestamp, timezone);
-
-      const entryHour = getHours(zonedTime);
-      const entryMinute = getMinutes(zonedTime);
-      const entryMinutes = entryHour * 60 + entryMinute;
-
-      // Circular distance for midnight handling
-      const rawDiff = entryMinutes - targetMinutes;
-      const distance = Math.min(
-        Math.abs(rawDiff),
-        Math.abs(rawDiff + 1440),
-        Math.abs(rawDiff - 1440)
-      );
+      const entryMinutes = getHours(zonedTime) * 60 + getMinutes(zonedTime);
+      const distance = Math.abs(entryMinutes - targetMinutes);
 
       if (distance <= windowMinutes && distance < bestDistance) {
         bestDistance = distance;
         bestEntry = entry;
+      }
+    }
+
+    // For hour 0, also check previous day's late entries (cross-midnight distance)
+    if (hour === 0) {
+      for (const entry of prevDayEntries) {
+        const zonedTime = toZonedTime(entry.timestamp, timezone);
+        const entryMinutes = getHours(zonedTime) * 60 + getMinutes(zonedTime);
+        // Distance from midnight: e.g. 23:45 → 1440 - 1425 = 15 min
+        const distance = 1440 - entryMinutes;
+
+        if (distance <= windowMinutes && distance < bestDistance) {
+          bestDistance = distance;
+          bestEntry = entry;
+        }
       }
     }
 
