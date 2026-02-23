@@ -240,6 +240,69 @@ Columns adapt dynamically based on selected metrics (V2 value then V3 value per 
 
 ---
 
+### 3. V2 Message Search
+
+**Purpose:** Search for specific messages within V2 `.log` files and analyze their hourly frequency distribution. Supports multiple search patterns with time-ordered and grouped views.
+
+#### Input Format
+
+Same V2 `.log` format as [V2-V3 Comparison](#2-v2-v3-aeris-cache-statistics-comparison) — a plain-text syslog-style file with lines like:
+
+```
+Feb 16 00:57:52 ip-172-30-0-166 node[3629451]: wwa:business-cron Fetching from Aeris: https://api.aerisapi.com/forecasts?p=...
+```
+
+> **Note:** V2 timestamps are in **America/New_York** timezone (no year). Year inferred from current year. Timestamps converted to UTC internally.
+
+#### Controls
+
+| Control             | Description                                                                                              |
+| ------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Timezone**        | Same timezone selector as other tools — affects display of all timestamps.                               |
+| **Search Patterns** | Text input where users type a message substring and press Enter (or click +) to add it as a search chip. |
+|                     | Multiple patterns supported. Each pattern matches lines whose message text **contains** the substring.   |
+
+#### Hourly Grouping Rules
+
+Matched messages are grouped by **date + hour** (in the selected display timezone):
+
+| Condition      | Display                                                                |
+| -------------- | ---------------------------------------------------------------------- |
+| **Count > 10** | Show time **range**: `HH:MM:SS – HH:MM:SS` (first ↔ last in that hour) |
+| **Count ≤ 10** | Show each timestamp **individually**: `HH:MM:SS, HH:MM:SS, …`          |
+
+#### Results Table
+
+A table displaying all matched hourly groups:
+
+| Date   | Hour  | Message Pattern                     | Count | Times                   |
+| ------ | ----- | ----------------------------------- | ----- | ----------------------- |
+| Feb 16 | 00:00 | Fetching from Aeris: https://api... | 47    | 00:02:15 – 00:58:33     |
+| Feb 16 | 01:00 | Fetching from Aeris: https://api... | 3     | 01:05:12, 01:22:30, ... |
+
+#### View Toggle
+
+A **"Group by message"** switch toggles between:
+
+- **Time order (default):** All hourly groups from all patterns merged and sorted chronologically.
+- **Group by message:** Rows grouped under collapsible message-pattern headers, sorted by time within each group.
+
+---
+
+### 4. V3 Message Search
+
+**Purpose:** Same as [V2 Message Search](#3-v2-message-search) but for V3 `.json` log files.
+
+#### Input Format
+
+Same V3 `.json` format as [Aeris Cache Statistics](#1-aeris-cache-statistics) — array of objects with `@timestamp` (UTC) and `@message`. The entire `@message` object is stringified for substring matching, so users can search for any field value within the message.
+
+#### Controls, Hourly Grouping, Results Table, View Toggle
+
+Identical to [V2 Message Search](#3-v2-message-search).
+
+---
+
 ## Future Tools
 
 > Additional analyzing tools will be added here as they are defined. Each follows the same pattern: vertical tab entry, dedicated file uploader, and tool-specific UI.

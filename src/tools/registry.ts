@@ -1,8 +1,12 @@
 import React from 'react';
 import AerisCacheTool from './aeris-cache/AerisCacheTool';
 import AerisComparisonTool from './aeris-comparison/AerisComparisonTool';
+import V2MessageSearchTool from './v2-message-search/V2MessageSearchTool';
+import V3MessageSearchTool from './v3-message-search/V3MessageSearchTool';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
+import SearchIcon from '@mui/icons-material/Search';
+import FindInPageIcon from '@mui/icons-material/FindInPage';
 
 export interface ToolDefinition {
   id: string;
@@ -24,4 +28,17 @@ export const tools: ToolDefinition[] = [
     icon: React.createElement(CompareArrowsIcon),
     component: AerisComparisonTool,
   },
+  {
+    id: 'v2-message-search',
+    label: 'V2 Message Search',
+    icon: React.createElement(SearchIcon),
+    component: V2MessageSearchTool,
+  },
+  {
+    id: 'v3-message-search',
+    label: 'V3 Message Search',
+    icon: React.createElement(FindInPageIcon),
+    component: V3MessageSearchTool,
+  },
 ];
+
