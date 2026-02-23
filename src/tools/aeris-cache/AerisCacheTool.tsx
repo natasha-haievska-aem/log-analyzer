@@ -33,7 +33,7 @@ function isValidAerisData(data: unknown): data is AerisLogEntry[] {
     '@message' in first &&
     typeof first['@message'] === 'object' &&
     first['@message'] !== null &&
-    'aerisCacheStats' in (first['@message'] as Record<string, unknown>)
+    'msg' in (first['@message'] as Record<string, unknown>)
   );
 }
 

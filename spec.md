@@ -88,17 +88,17 @@ Tools are modular. Each tool is a self-contained React component registered in t
 
 #### Input Format
 
-A `.json` file containing an **array of objects**. Each object has the structure:
+A `.json` file containing an **array of log entry objects**. Each object has `@timestamp` and `@message`, but the shape of `@message` varies by log type. The only guaranteed field is `msg`:
 
 ```json
 {
   "@timestamp": "2026-02-11 18:54:07.338",
   "@message": {
+    "msg": "Aeris cache stats",
     "level": 30,
     "time": 1770836047338,
     "pid": 1,
     "hostname": "ip-172-30-9-161.ec2.internal",
-    "msg": "Aeris cache stats",
     "runId": "47f217e1-2f48-4790-83f5-d8893bb7583a",
     "aerisCacheStats": {
       "hits": 0,
@@ -113,7 +113,7 @@ A `.json` file containing an **array of objects**. Each object has the structure
 }
 ```
 
-> **Note:** `@timestamp` is always **UTC**.
+> **Note:** `@timestamp` is always **UTC**. The file may contain entries with different `msg` values — this tool filters to entries where `msg` includes `"Aeris cache stats"`.
 
 #### Available Metric Fields (Y-axis)
 

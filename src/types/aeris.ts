@@ -1,13 +1,15 @@
+/** Generic log entry from v3 JSON logs. @message shape varies by log type. */
 export interface AerisLogEntry {
   '@timestamp': string;
   '@message': {
-    level: number;
-    time: number;
-    pid: number;
-    hostname: string;
     msg: string;
-    runId: string;
-    aerisCacheStats: AerisCacheStats;
+    level?: number;
+    time?: number;
+    pid?: number;
+    hostname?: string;
+    runId?: string;
+    aerisCacheStats?: AerisCacheStats;
+    [key: string]: unknown;
   };
 }
 

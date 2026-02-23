@@ -21,15 +21,15 @@ export function useAerisData(
     if (!rawData) return [];
 
     return rawData
-      .filter((entry) => entry['@message']?.aerisCacheStats)
+      .filter((entry) => entry['@message']?.msg?.includes('Aeris cache stats'))
       .map((entry): ParsedEntry => {
         const ts = new Date(entry['@timestamp'].replace(' ', 'T') + 'Z');
         return {
           timestamp: ts,
           zonedTime: toZonedTime(ts, timezone),
-          stats: entry['@message'].aerisCacheStats,
-          runId: entry['@message'].runId,
-          hostname: entry['@message'].hostname,
+          stats: entry['@message'].aerisCacheStats!,
+          runId: entry['@message'].runId ?? '',
+          hostname: entry['@message'].hostname ?? '',
         };
       })
       .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());

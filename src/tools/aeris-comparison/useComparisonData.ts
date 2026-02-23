@@ -24,12 +24,12 @@ export function useComparisonData(
   const parsedV3 = useMemo((): TimestampedEntry[] => {
     if (!v3Data) return [];
     return v3Data
-      .filter((entry) => entry['@message']?.aerisCacheStats)
+      .filter((entry) => entry['@message']?.msg?.includes('Aeris cache stats'))
       .map((entry) => {
         const ts = new Date(entry['@timestamp'].replace(' ', 'T') + 'Z');
         return {
           timestamp: ts,
-          stats: entry['@message'].aerisCacheStats,
+          stats: entry['@message'].aerisCacheStats!,
         };
       })
       .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
